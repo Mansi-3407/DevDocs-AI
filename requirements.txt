@@ -1,8 +1,0 @@
-gitpython>=3.1
-pytest>=8.0
-
-# ---------------------------------------------------------------------------
-# LLM provider dependencies — uncomment when a provider is chosen
-# ---------------------------------------------------------------------------
-# openai>=1.0
-# ibm-watsonx-ai>=1.0
