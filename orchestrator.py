@@ -142,6 +142,38 @@ def _run_single_agent(
         elif agent_name == "example_validator":
             result = agent_module.ExampleValidator().run(context.repo_path)
 
+        elif agent_name == "tutorial_agent":
+            agent = agent_module.TutorialAgent()
+
+            features = agent.detect_features(context.git_diff or "")
+
+            for feature in features:
+                agent.generate_code_example(feature)
+                agent.generate_troubleshooting(feature)
+                agent.generate_tutorial(feature)
+
+            result = {  
+                "status": "success",
+                "features_detected": len(features),
+            }
+
+        elif agent_name == "changelog_agent":
+            agent = agent_module.ChangelogAgent()
+
+            commits = context.config.get("commits", [])
+
+            parsed_commits = agent.parse_commits(commits)
+            breaking_commits = agent.detect_breaking(parsed_commits)
+
+            agent.generate_changelog(parsed_commits)
+            agent.generate_migration(breaking_commits)
+
+            result = {
+                "status": "success",
+                "commits_parsed": len(parsed_commits),
+                "breaking_changes": len(breaking_commits),
+            }
+
         else:
             return agent_module.run(context)
 

@@ -83,7 +83,7 @@ class TestPipelineAgainstV2Fixture:
     def test_content_agents_reflect_current_implementation_status(
         self, tmp_path: Path
     ):
-        """Implemented P2 agents succeed while unimplemented agents remain skipped."""
+        """Implemented content agents succeed while the remaining stub stays skipped."""
         repo = _copy_fixture(_FIXTURE_V2, tmp_path)
         result = orchestrator.run(repo_path=str(repo))
 
@@ -92,8 +92,8 @@ class TestPipelineAgainstV2Fixture:
         assert statuses["readme_agent"] == "skipped"
         assert statuses["api_agent"] == "success"
         assert statuses["example_validator"] == "success"
-        assert statuses["tutorial_agent"] == "skipped"
-        assert statuses["changelog_agent"] == "skipped"
+        assert statuses["tutorial_agent"] == "success"
+        assert statuses["changelog_agent"] == "success"
 
     def test_report_is_non_empty_markdown_string(self, tmp_path: Path):
         repo = _copy_fixture(_FIXTURE_V2, tmp_path)
