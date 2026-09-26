@@ -1,22 +1,31 @@
 """
 Pytest configuration for DevDocs AI tests.
 
-Session-scoped autouse fixture forces LLM_PROVIDER=stub for every test,
-ensuring no test ever makes a real LLM network call.
+Ensures the repository root is available for app.* imports and
+forces the LLM provider to stub during tests.
 """
 
 import os
+import sys
+from pathlib import Path
+
 import pytest
 
+# Repository root = tests/../
+_ROOT = Path(__file__).parent.parent
+if str(_ROOT) not in sys.path:
+    sys.path.insert(0, str(_ROOT))
 
-@pytest.fixture(autouse=True, scope="session")
-def force_stub_llm():
-    """Set LLM_PROVIDER=stub for the entire test session."""
-    original = os.environ.get("LLM_PROVIDER")
+
+@pytest.fixture(scope="session", autouse=True)
+def force_stub_llm_provider():
+    """Force all tests to use the stub LLM provider."""
+    previous = os.environ.get("LLM_PROVIDER")
     os.environ["LLM_PROVIDER"] = "stub"
+
     yield
-    # Restore original value after the session
-    if original is None:
+
+    if previous is None:
         os.environ.pop("LLM_PROVIDER", None)
     else:
-        os.environ["LLM_PROVIDER"] = original
+        os.environ["LLM_PROVIDER"] = previous

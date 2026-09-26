@@ -25,6 +25,7 @@ Design constraints
 from __future__ import annotations
 
 import types
+from pathlib import Path
 from concurrent.futures import ThreadPoolExecutor, as_completed
 
 from app.models import AgentContext, AgentResult
@@ -123,9 +124,36 @@ def _build_context(repo_path: str, base_ref: str, config: dict) -> AgentContext:
 def _run_single_agent(
     agent_module: types.ModuleType, context: AgentContext
 ) -> AgentResult:
-    """Call agent_module.run(context) and catch any exception."""
+    """Run an agent module through its supported interface."""
     try:
-        return agent_module.run(context)
+        module_name = getattr(agent_module, "__name__", str(agent_module))
+        agent_name = module_name.split(".")[-1]
+
+        if agent_name == "api_agent":
+            target_files = list(Path(context.repo_path).rglob("*.py"))
+
+            if not target_files:
+                raise FileNotFoundError(
+                    f"No Python files found in repository: {context.repo_path}"
+                )
+
+            result = agent_module.APIAgent().run(str(target_files[0]))
+
+        elif agent_name == "example_validator":
+            result = agent_module.ExampleValidator().run(context.repo_path)
+
+        else:
+            return agent_module.run(context)
+
+        return AgentResult(
+            agent_name=agent_name,
+            status=result.get("status", "error"),
+            summary=f"{agent_name} completed with status {result.get('status', 'error')}.",
+            output_files=[],
+            issues=result.get("errors", []),
+            raw_output=result,
+        )
+
     except Exception as exc:  # noqa: BLE001
         module_name = getattr(agent_module, "__name__", str(agent_module))
         agent_name = module_name.split(".")[-1]

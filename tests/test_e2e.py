@@ -80,15 +80,20 @@ class TestPipelineAgainstV2Fixture:
             assert isinstance(r, AgentResult)
             assert r.status in ("success", "warning", "error", "skipped")
 
-    def test_content_agents_all_skipped_until_implemented(self, tmp_path: Path):
-        """All five content agents are stubs → all return status=skipped."""
+    def test_content_agents_reflect_current_implementation_status(
+        self, tmp_path: Path
+    ):
+        """Implemented P2 agents succeed while unimplemented agents remain skipped."""
         repo = _copy_fixture(_FIXTURE_V2, tmp_path)
         result = orchestrator.run(repo_path=str(repo))
-        for r in result["results"]:
-            assert r.status == "skipped", (
-                f"{r.agent_name} returned status={r.status!r}; "
-                "expected 'skipped' while teammate stubs are in place"
-            )
+
+        statuses = {r.agent_name: r.status for r in result["results"]}
+
+        assert statuses["readme_agent"] == "skipped"
+        assert statuses["api_agent"] == "success"
+        assert statuses["example_validator"] == "success"
+        assert statuses["tutorial_agent"] == "skipped"
+        assert statuses["changelog_agent"] == "skipped"
 
     def test_report_is_non_empty_markdown_string(self, tmp_path: Path):
         repo = _copy_fixture(_FIXTURE_V2, tmp_path)
