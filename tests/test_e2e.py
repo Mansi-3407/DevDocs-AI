@@ -89,7 +89,7 @@ class TestPipelineAgainstV2Fixture:
 
         statuses = {r.agent_name: r.status for r in result["results"]}
 
-        assert statuses["readme_agent"] == "skipped"
+        assert statuses["readme_agent"] == "success"
         assert statuses["api_agent"] == "success"
         assert statuses["example_validator"] == "success"
         assert statuses["tutorial_agent"] == "success"
